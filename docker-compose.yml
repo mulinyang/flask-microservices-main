@@ -4,9 +4,10 @@ services:
 
   users-db:
     container_name: users-db
-    build: ../flask-microservices-users/project/db
+    build:
+      context: ../flask-microservices-users/project/db
     ports:
-        - 5435:5432  # expose ports - HOST:CONTAINER
+      - 5435:5432  # expose ports - HOST:CONTAINER
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -15,7 +16,11 @@ services:
 
   users-service:
     container_name: users-service
-    build: ../flask-microservices-users
+    build:
+      context: ../flask-microservices-users
+      dockerfile: Dockerfile-local
+    volumes:
+      - '../flask-microservices-users:/usr/src/app'
     ports:
       - 5001:5000 # expose ports - HOST:CONTAINER
     environment:
@@ -46,13 +51,17 @@ services:
 
   web-service:
     container_name: web-service
-    build: 
+    build:
       context: ../flask-microservices-client
-      args:
-        - NODE_ENV=development
-        - REACT_APP_USERS_SERVICE_URL=${REACT_APP_USERS_SERVICE_URL}
+      dockerfile: Dockerfile-local
+    volumes:
+      - '../flask-microservices-client:/usr/src/app'
+      - '/usr/src/app/node_modules'
     ports:
       - '9000:9000' # expose ports - HOST:CONTAINER
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_USERS_SERVICE_URL=${REACT_APP_USERS_SERVICE_URL}
     depends_on:
       users-service:
         condition: service_started
@@ -70,4 +79,3 @@ services:
     depends_on:
       users-service:
         condition: service_started
-
